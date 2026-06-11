@@ -1,4 +1,4 @@
-import { Home, Swords, MessageSquare, Lightbulb, Trophy, User, Users, Award } from 'lucide-react';
+import { Home, Swords, MessageSquare, Lightbulb, Trophy, User, Users, Award, LogOut } from 'lucide-react';
 
 const AVATAR_COLORS = ['#7c3aed','#ec4899','#06b6d4','#10b981','#f59e0b','#ef4444','#8b5cf6','#14b8a6'];
 
@@ -37,7 +37,7 @@ const NAV_ITEMS = [
   { id: 'leaderboard', label: 'Ranks',     icon: Trophy },
 ];
 
-export default function Navbar({ user, screen, navigate }) {
+export default function Navbar({ user, screen, navigate, onLogout }) {
   return (
     <nav className="navbar">
       <div className="navbar-logo" onClick={() => navigate('home')}>
@@ -64,6 +64,15 @@ export default function Navbar({ user, screen, navigate }) {
       >
         <Avatar username={user.username} size={28} />
         <span>{user.username}</span>
+      </button>
+
+      <button
+        className="nav-link"
+        onClick={onLogout}
+        title="Log out"
+        style={{ color: 'var(--text3)', marginLeft: '0.1rem' }}
+      >
+        <LogOut size={15} />
       </button>
     </nav>
   );

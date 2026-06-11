@@ -14,8 +14,12 @@ app.use(cors());
 app.use(express.json());
 
 // ─── Data ──────────────────────────────────────
-const DATA_DIR = path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
+// On Vercel, the filesystem is ephemeral (read-only in prod).
+// We persist to disk only when running locally.
+const IS_VERCEL = process.env.VERCEL === '1' || process.env.VERCEL_ENV !== undefined;
+const DATA_DIR  = path.join(__dirname, 'data');
+
+if (!IS_VERCEL && !fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 
 const FILES = {
   leaderboard:     path.join(DATA_DIR, 'leaderboard.json'),
@@ -31,10 +35,14 @@ const FILES = {
 };
 
 function load(key, def) {
+  if (IS_VERCEL) return def;
   try { if (fs.existsSync(FILES[key])) return JSON.parse(fs.readFileSync(FILES[key], 'utf8')); } catch {}
   return def;
 }
-function save(key, data) { fs.writeFileSync(FILES[key], JSON.stringify(data, null, 2)); }
+function save(key, data) {
+  if (IS_VERCEL) return; // no-op on Vercel — data lives in-memory for this instance
+  try { fs.writeFileSync(FILES[key], JSON.stringify(data, null, 2)); } catch {}
+}
 
 // ─── State ─────────────────────────────────────
 const leaderboard     = load('leaderboard', {});
@@ -812,4 +820,4 @@ function advanceTournament(t, matchId, winnerId, winnerName) {
 
 // ─── Start ──────────────────────────────────────
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => console.log(`\n🌴 UnitedOasis Server → http://localhost:${PORT}\n`));
+server.listen(PORT, () => console.log(`\n🌴 UnitedOasis Server → http://localhost:${PORT}  [${IS_VERCEL ? 'Vercel/in-memory' : 'Local/disk'}]\n`));

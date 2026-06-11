@@ -21,6 +21,23 @@ export default function App() {
   const [leaderboard, setLeaderboard]     = useState([]);
   const [tipToast, setTipToast]           = useState(null);
   const [isWaiting, setIsWaiting]         = useState(false);
+  const [sessionRestored, setSessionRestored] = useState(false); // prevents landing flicker
+
+  // ── Restore session from localStorage on mount ──
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('unitedoasis_user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        setUser(u);
+        socket.emit('set-user', { username: u.username });
+      }
+    } catch (e) {
+      console.error('Failed to restore session:', e);
+    } finally {
+      setSessionRestored(true);
+    }
+  }, []);
 
   // ── Socket global listeners ────────────────
   useEffect(() => {
@@ -54,6 +71,9 @@ export default function App() {
   const handleLogin = useCallback((username) => {
     const u = { username };
     setUser(u);
+    try {
+      localStorage.setItem('unitedoasis_user', JSON.stringify(u));
+    } catch {}
     socket.emit('set-user', { username });
     setScreen('home');
   }, []);
@@ -73,6 +93,19 @@ export default function App() {
     setScreen('arena');
   }, []);
 
+  // ── Logout ─────────────────────────────────
+  const handleLogout = useCallback(() => {
+    try { localStorage.removeItem('unitedoasis_user'); } catch {}
+    setUser(null);
+    setScreen('home');
+    setDebateRoom(null);
+    setSpectateRoom(null);
+    setIsWaiting(false);
+  }, []);
+
+  // While restoring session, show nothing to avoid flicker
+  if (!sessionRestored) return null;
+
   if (!user) return <LandingScreen onLogin={handleLogin} />;
 
   return (
@@ -82,6 +115,7 @@ export default function App() {
         screen={screen}
         navigate={navigate}
         leaderboard={leaderboard}
+        onLogout={handleLogout}
       />
 
       <div className="main-content">
