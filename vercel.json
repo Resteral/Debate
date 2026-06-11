@@ -24,6 +24,14 @@
       "dest": "backend/server.js"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "frontend/assets/$1"
+    },
+    {
+      "src": "/(favicon.svg|icons.svg)",
+      "dest": "frontend/$1"
+    },
+    {
       "handle": "filesystem"
     },
     {
