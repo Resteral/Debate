@@ -5,6 +5,8 @@ const cors   = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const fs     = require('fs');
 const path   = require('path');
+const fetch  = require('node-fetch');
+const Parser = require('rss-parser');
 
 const app    = express();
 const server = http.createServer(app);
@@ -218,7 +220,189 @@ function settleBets(tournament, roomId, winnerId, winnerName) {
   });
 }
 
+const parser = new Parser();
+
+const FEEDS = {
+  world: [
+    { name: 'BBC News', url: 'http://feeds.bbci.co.uk/news/rss.xml' },
+    { name: 'NYT Home', url: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml' }
+  ],
+  local: [
+    { name: 'NPR News', url: 'https://feeds.npr.org/1001/rss.xml' }
+  ],
+  streamers: [
+    { name: 'r/LivestreamFail', url: 'https://www.reddit.com/r/LivestreamFail/.rss' },
+    { name: 'r/OutOfTheLoop', url: 'https://www.reddit.com/r/OutOfTheLoop/.rss' }
+  ],
+  theory: [
+    { name: 'r/conspiracy', url: 'https://www.reddit.com/r/conspiracy/.rss' },
+    { name: 'r/AskReddit', url: 'https://www.reddit.com/r/AskReddit/.rss' }
+  ],
+  life: [
+    { name: 'r/AmItheAsshole', url: 'https://www.reddit.com/r/AmItheAsshole/.rss' },
+    { name: 'r/relationship_advice', url: 'https://www.reddit.com/r/relationship_advice/.rss' }
+  ]
+};
+
+const NEWS_CACHE = {};
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+async function fetchAndParseRSS(url) {
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) UnitedOasisDebate/1.0'
+    },
+    timeout: 5000
+  });
+  if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+  const xml = await response.text();
+  return await parser.parseString(xml);
+}
+
+async function getCachedNews(category) {
+  const now = Date.now();
+  
+  if (category === 'all') {
+    const categories = Object.keys(FEEDS);
+    const results = await Promise.all(categories.map(cat => getCachedNews(cat)));
+    return results.flat().sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+  }
+  
+  const sources = FEEDS[category];
+  if (!sources) return [];
+  
+  const cached = NEWS_CACHE[category];
+  if (cached && (now - cached.lastFetched) < CACHE_TTL) {
+    return cached.data;
+  }
+  
+  const feedPromises = sources.map(async (src) => {
+    try {
+      const parsed = await fetchAndParseRSS(src.url);
+      return (parsed.items || []).map(item => ({
+        id: item.id || item.guid || item.link,
+        title: item.title,
+        link: item.link,
+        source: src.name,
+        pubDate: item.pubDate || item.isoDate || new Date().toISOString(),
+        category,
+        contentSnippet: (item.contentSnippet || item.content || '').slice(0, 300)
+      }));
+    } catch (err) {
+      console.error(`Failed to fetch RSS source ${src.name}:`, err.message);
+      return [];
+    }
+  });
+  
+  const allResults = await Promise.all(feedPromises);
+  const items = allResults.flat().sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+  
+  NEWS_CACHE[category] = {
+    data: items,
+    lastFetched: now
+  };
+  
+  return items;
+}
+
+const THEME_TOPICS = {
+  politics: [
+    "Should wealthy nations provide universal basic income?",
+    "Is a two-party system detrimental to democracy?",
+    "Should voting be mandatory in democratic countries?",
+    "Should political advertising on social media be banned?",
+    "Is globalization doing more harm than good to local economies?"
+  ],
+  science: [
+    "Should AI development be heavily regulated to prevent extinction risks?",
+    "Is colonizing Mars a wise use of humanity's resources?",
+    "Should gene editing (CRISPR) be allowed on human embryos?",
+    "Is social media technology designed to be addictive, and should it be banned for minors?",
+    "Will quantum computing render all current cryptography obsolete?"
+  ],
+  gaming: [
+    "Are microtransactions ruining the video game industry?",
+    "Is cloud gaming the inevitable future of the medium?",
+    "Should video games be officially recognized as an Olympic sport?",
+    "Is single-player narrative storytelling superior to multiplayer games?",
+    "Do violent video games contribute to real-world aggression?"
+  ],
+  sports: [
+    "Should college athletes be paid salaries like professionals?",
+    "Is the use of technology (like VAR/Replay) ruining the flow of sports?",
+    "Should transgender athletes compete in categories matching their gender identity?",
+    "Are esports equal in athletic validity to traditional sports?",
+    "Should performance-enhancing drugs be legalized and regulated in sports?"
+  ],
+  culture: [
+    "Is cancel culture holding public figures accountable or silencing free speech?",
+    "Has streaming killed the traditional cinema/movie theater experience?",
+    "Is modern art more about status and money than actual talent?",
+    "Should physical books be completely replaced by digital formats?",
+    "Are influencer careers viable long-term professions?"
+  ],
+  news: [
+    "Should governments restrict the use of facial recognition technology in public?",
+    "Is the transition to electric vehicles happening too fast for current infrastructure?",
+    "Should central banks launch digital-only national currencies (CBDCs)?",
+    "Should work weeks be shortened to four days globally?"
+  ],
+  theory: [
+    "Are we living in a computer simulation?",
+    "Did advanced ancient civilizations exist before recorded history?",
+    "Is there intelligent alien life currently visiting Earth?",
+    "Will artificial general intelligence surpass human intelligence in this decade?",
+    "Is the Mandela Effect proof of parallel universes?"
+  ],
+  streamer: [
+    "Should platforms ban streamers who engage in high-risk real-life stunts?",
+    "Is subathon/marathon streaming unhealthy and exploitative?",
+    "Should VTubing replace traditional face-cam streaming?",
+    "Are parasocial relationships with content creators harmful to viewers?",
+    "Is Kick a viable competitor to Twitch in the long run?"
+  ],
+  life: [
+    "Is it acceptable to ghost someone after a first date?",
+    "Should partners have access to each other's cell phones?",
+    "Is it okay to remain close friends with an ex-partner?",
+    "Should couples split all expenses 50/50 regardless of income disparity?",
+    "Is telling white lies necessary to maintain a healthy relationship?"
+  ]
+};
+
+async function pickThemeTopic(theme) {
+  if (theme === 'news') {
+    try {
+      const items = await getCachedNews('world');
+      const validItems = items.filter(item => item.title && item.title.length > 15 && item.title.length < 150);
+      if (validItems.length > 0) {
+        const randomItem = validItems[Math.floor(Math.random() * validItems.length)];
+        return `Is this true or false: "${randomItem.title}"? Let's debate!`;
+      }
+    } catch (e) {
+      console.error("Failed to fetch news for debate topic:", e);
+    }
+  }
+  
+  const pool = THEME_TOPICS[theme];
+  if (pool && pool.length > 0) {
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  return pickRandomTopic().text;
+}
+
 // ─── REST API ─────────────────────────────────────
+app.get('/api/news', async (req, res) => {
+  const category = req.query.category || 'all';
+  try {
+    const data = await getCachedNews(category);
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching news:', error);
+    res.status(500).json({ error: 'Failed to fetch news feed.' });
+  }
+});
+
 app.get('/api/leaderboard',  (_, res) => res.json(getLeaderboard()));
 app.get('/api/topics',       (_, res) => res.json([...topics].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))));
 app.get('/api/forum',        (req, res) => {
@@ -550,22 +734,78 @@ io.on('connection', (socket) => {
   });
 
   // ── Matchmaking ───────────────────────────────
-  socket.on('join-queue', ({ username }) => {
-    socket.username=username; socket.role='debater';
-    if (waitingQueue.find(s=>s.id===socket.id)) return;
-    if (waitingQueue.length>0) {
-      const opp=waitingQueue.shift();
-      const roomId=uuidv4(), topic=pickRandomTopic();
-      rooms[roomId]={
-        id:roomId, topic:topic.text, debaters:[opp,socket], spectators:[],
-        votes:{[opp.id]:0,[socket.id]:0}, votedSockets:new Set(), phase:'debating',
-        startedAt:Date.now(), debaterNames:{[opp.id]:opp.username,[socket.id]:socket.username}, timerHandle:null,
-        tournamentMatchId:null,
+  socket.on('join-queue', async ({ username, theme, customTopic }) => {
+    socket.username = username;
+    socket.role = 'debater';
+    socket.theme = theme || 'default';
+    socket.customTopic = customTopic || null;
+    socket.queueJoinedAt = Date.now();
+
+    if (waitingQueue.find(s => s.id === socket.id)) return;
+
+    let oppIndex = -1;
+
+    // 1. Match on exact custom topic if provided
+    if (socket.customTopic) {
+      oppIndex = waitingQueue.findIndex(s => s.customTopic === socket.customTopic);
+    }
+
+    // 2. Match on same theme (and no custom topic, unless it falls back)
+    if (oppIndex === -1) {
+      oppIndex = waitingQueue.findIndex(s => s.theme === socket.theme && !s.customTopic);
+    }
+
+    // 3. Fallback: match with anyone who has been waiting in queue for more than 5 seconds
+    if (oppIndex === -1) {
+      const now = Date.now();
+      oppIndex = waitingQueue.findIndex(s => (now - s.queueJoinedAt) > 5000);
+    }
+
+    if (oppIndex > -1) {
+      const opp = waitingQueue.splice(oppIndex, 1)[0];
+      const roomId = uuidv4();
+      
+      const finalTheme = opp.theme === socket.theme ? socket.theme : (opp.theme || socket.theme || 'default');
+      
+      let finalTopic = '';
+      if (opp.customTopic && socket.customTopic && opp.customTopic === socket.customTopic) {
+        finalTopic = socket.customTopic;
+      } else if (opp.customTopic) {
+        finalTopic = opp.customTopic;
+      } else if (socket.customTopic) {
+        finalTopic = socket.customTopic;
+      } else {
+        finalTopic = await pickThemeTopic(finalTheme);
+      }
+
+      rooms[roomId] = {
+        id: roomId,
+        topic: finalTopic,
+        debaters: [opp, socket],
+        spectators: [],
+        votes: { [opp.id]: 0, [socket.id]: 0 },
+        votedSockets: new Set(),
+        phase: 'debating',
+        startedAt: Date.now(),
+        debaterNames: { [opp.id]: opp.username, [socket.id]: socket.username },
+        timerHandle: null,
+        tournamentMatchId: null,
+        theme: finalTheme
       };
-      opp.join(roomId); socket.join(roomId);
-      const rd={ roomId, topic:topic.text, debaterA:{id:opp.id,username:opp.username}, debaterB:{id:socket.id,username:socket.username} };
-      opp.emit('match-found',    { ...rd, myRole:'debaterA' });
-      socket.emit('match-found', { ...rd, myRole:'debaterB' });
+
+      opp.join(roomId);
+      socket.join(roomId);
+
+      const rd = {
+        roomId,
+        topic: finalTopic,
+        debaterA: { id: opp.id, username: opp.username },
+        debaterB: { id: socket.id, username: socket.username },
+        theme: finalTheme
+      };
+
+      opp.emit('match-found', { ...rd, myRole: 'debaterA' });
+      socket.emit('match-found', { ...rd, myRole: 'debaterB' });
       io.emit('room-opened', rd);
       startDebateTimer(roomId);
     } else {
@@ -586,6 +826,7 @@ io.on('connection', (socket) => {
       debaterA:{id:room.debaters[0].id,username:room.debaters[0].username},
       debaterB:{id:room.debaters[1].id,username:room.debaters[1].username},
       votes:room.votes, phase:room.phase,
+      theme:room.theme || 'default',
     });
     io.to(roomId).emit('spectator-count',{count:room.spectators.length});
   });
@@ -595,6 +836,7 @@ io.on('connection', (socket) => {
       debaterA:{id:r.debaters[0].id,username:r.debaters[0].username},
       debaterB:{id:r.debaters[1].id,username:r.debaters[1].username},
       spectatorCount:r.spectators.length, phase:r.phase,
+      theme:r.theme || 'default',
     })));
   });
   socket.on('signal', ({ to, signal }) => io.to(to).emit('signal', { from:socket.id, signal }));

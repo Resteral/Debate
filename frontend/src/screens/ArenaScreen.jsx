@@ -2,8 +2,22 @@ import { useState, useEffect } from 'react';
 import { Swords, Eye, Mic } from 'lucide-react';
 import socket from '../socket';
 
+const THEMES = [
+  { id: 'default', name: 'Random Arena', icon: '⚔️', desc: 'Jump into a random debate topic', glow: 'rgba(99, 102, 241, 0.4)' },
+  { id: 'politics', name: 'Politics', icon: '🏛️', desc: 'Government, policies, and elections', glow: 'rgba(239, 68, 68, 0.4)' },
+  { id: 'science', name: 'Science & Tech', icon: '🧪', desc: 'AI, space, physics, and tech future', glow: 'rgba(16, 185, 129, 0.4)' },
+  { id: 'gaming', name: 'Gaming', icon: '🎮', desc: 'Esports, game design, and console wars', glow: 'rgba(139, 92, 246, 0.4)' },
+  { id: 'sports', name: 'Sports', icon: '🏆', desc: 'Athletes, leagues, and rules of the game', glow: 'rgba(245, 158, 11, 0.4)' },
+  { id: 'culture', name: 'Culture', icon: '🎭', desc: 'Pop culture, movies, music, and art', glow: 'rgba(236, 72, 153, 0.4)' },
+  { id: 'news', name: 'Current News', icon: '📰', desc: 'Real-world events and breaking news', glow: 'rgba(6, 182, 212, 0.4)' },
+  { id: 'theory', name: 'Theories', icon: '🌌', desc: 'Simulation theory, space mysteries, conspiracy', glow: 'rgba(20, 184, 166, 0.4)' },
+  { id: 'streamer', name: 'Streamers', icon: '👾', desc: 'Twitch, YouTube, and streamer drama', glow: 'rgba(145, 70, 255, 0.4)' },
+  { id: 'life', name: 'Day-to-Day', icon: '🏠', desc: 'Relationships, daily life, ethics, and AITA', glow: 'rgba(251, 146, 60, 0.4)' }
+];
+
 export default function ArenaScreen({ user, navigate, isWaiting, setIsWaiting }) {
   const [rooms, setRooms] = useState([]);
+  const [selectedTheme, setSelectedTheme] = useState('default');
 
   useEffect(() => {
     socket.emit('get-rooms');
@@ -25,7 +39,7 @@ export default function ArenaScreen({ user, navigate, isWaiting, setIsWaiting })
   }, []);
 
   const joinQueue = () => {
-    socket.emit('join-queue', { username: user.username });
+    socket.emit('join-queue', { username: user.username, theme: selectedTheme });
   };
   const leaveQueue = () => {
     socket.emit('leave-queue');
@@ -48,22 +62,47 @@ export default function ArenaScreen({ user, navigate, isWaiting, setIsWaiting })
             <button className="btn btn-ghost" onClick={leaveQueue}>Cancel</button>
           </div>
         ) : (
-          <div className="arena-actions">
-            <div className="debate-card-action card" onClick={joinQueue} id="find-debate-btn">
-              <div className="debate-card-icon">🎤</div>
-              <div className="debate-card-title">Start Debating</div>
-              <div className="debate-card-desc">Get matched with a random opponent on a surprise topic.</div>
-              <button className="btn btn-primary mt-md w-full">Find Match</button>
+          <>
+            {/* Theme Picker Grid */}
+            <div className="theme-picker-section" style={{ marginBottom: '2.5rem', width: '100%' }}>
+              <div className="section-title" style={{ marginTop: 0, marginBottom: '1.25rem', textAlign: 'center' }}>
+                Select a Debate Theme
+              </div>
+              <div className="theme-grid">
+                {THEMES.map(theme => (
+                  <div
+                    key={theme.id}
+                    className={`theme-card card${selectedTheme === theme.id ? ' active' : ''}`}
+                    style={{ '--theme-glow': theme.glow }}
+                    onClick={() => setSelectedTheme(theme.id)}
+                  >
+                    <div className="theme-icon">{theme.icon}</div>
+                    <div className="theme-name">{theme.name}</div>
+                    <div className="theme-desc">{theme.desc}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="debate-card-action card">
-              <div className="debate-card-icon">👁️</div>
-              <div className="debate-card-title">Spectate</div>
-              <div className="debate-card-desc">Watch live debates below. Vote for the best debater and send tips!</div>
-              <span className="btn btn-ghost mt-md w-full" style={{ cursor: 'default' }}>
-                {rooms.length} live room{rooms.length !== 1 ? 's' : ''}
-              </span>
+
+            <div className="arena-actions">
+              <div className="debate-card-action card" onClick={joinQueue} id="find-debate-btn">
+                <div className="debate-card-icon">🎤</div>
+                <div className="debate-card-title">Start Debating</div>
+                <div className="debate-card-desc">
+                  Matched on: <strong>{THEMES.find(t => t.id === selectedTheme)?.name}</strong>
+                </div>
+                <button className="btn btn-primary mt-md w-full">Find Match</button>
+              </div>
+              <div className="debate-card-action card">
+                <div className="debate-card-icon">👁️</div>
+                <div className="debate-card-title">Spectate</div>
+                <div className="debate-card-desc">Watch live debates below. Vote for the best debater and send tips!</div>
+                <span className="btn btn-ghost mt-md w-full" style={{ cursor: 'default' }}>
+                  {rooms.length} live room{rooms.length !== 1 ? 's' : ''}
+                </span>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 

@@ -1,4 +1,4 @@
-import { Home, Swords, MessageSquare, Lightbulb, Trophy, User, Users, Award, LogOut } from 'lucide-react';
+import { Home, Swords, MessageSquare, Lightbulb, Trophy, User, Users, Award, LogOut, Newspaper } from 'lucide-react';
 
 const AVATAR_COLORS = ['#7c3aed','#ec4899','#06b6d4','#10b981','#f59e0b','#ef4444','#8b5cf6','#14b8a6'];
 
@@ -32,6 +32,7 @@ const NAV_ITEMS = [
   { id: 'home',        label: 'Home',      icon: Home },
   { id: 'arena',       label: 'Arena',     icon: Swords },
   { id: 'tournaments', label: 'Tourney',   icon: Award },
+  { id: 'news',        label: 'News',      icon: Newspaper },
   { id: 'forum',       label: 'Forum',     icon: MessageSquare },
   { id: 'topics',      label: 'Topics',    icon: Lightbulb },
   { id: 'leaderboard', label: 'Ranks',     icon: Trophy },

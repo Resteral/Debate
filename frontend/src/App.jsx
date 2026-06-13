@@ -10,6 +10,7 @@ import TopicsScreen from './screens/TopicsScreen';
 import LeaderboardScreen from './screens/LeaderboardScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import TournamentScreen from './screens/TournamentScreen';
+import NewsScreen from './screens/NewsScreen';
 import TipToast from './components/TipToast';
 
 export default function App() {
@@ -164,6 +165,13 @@ export default function App() {
           <TournamentScreen
             user={user}
             navigate={navigate}
+          />
+        )}
+        {screen === 'news' && (
+          <NewsScreen
+            user={user}
+            navigate={navigate}
+            setIsWaiting={setIsWaiting}
           />
         )}
         {screen === 'profile' && (

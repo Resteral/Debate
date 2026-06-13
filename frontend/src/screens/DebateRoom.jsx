@@ -31,6 +31,7 @@ export default function DebateRoom({ user, roomData, isSpectator = false, onLeav
     roomId, topic,
     debaterA, debaterB,
     myRole,
+    theme,
   } = roomData;
 
   const [phase,         setPhase]         = useState(roomData.phase || 'debating');
@@ -185,7 +186,7 @@ export default function DebateRoom({ user, roomData, isSpectator = false, onLeav
   const getVotePct = (id) => totalVotes > 0 ? Math.round((votes[id] || 0) / totalVotes * 100) : 50;
 
   return (
-    <div style={{ position: 'fixed', top: 'var(--nav-h)', left: 0, right: 0, bottom: 0, display: 'flex' }}>
+    <div className={`debate-room-container debate-bg-${theme || 'default'}`} style={{ position: 'fixed', top: 'var(--nav-h)', left: 0, right: 0, bottom: 0, display: 'flex' }}>
       {/* ── Main stage ── */}
       <div className="debate-stage" style={{ flex: 1 }}>
         {/* Header */}

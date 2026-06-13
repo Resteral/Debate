@@ -892,3 +892,286 @@ a  { color: var(--primary2); text-decoration: none; }
   align-self: flex-start;
   margin-top: 0.2rem;
 }
+
+/* ── Debate Theme Picker & News Feed Screens ── */
+
+/* Theme Grid Selector */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+}
+.theme-card {
+  padding: 0.85rem;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--surface);
+}
+.theme-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 0 12px var(--theme-glow);
+}
+.theme-card.active {
+  border-color: var(--primary2);
+  background: rgba(99, 102, 241, 0.08);
+  box-shadow: 0 0 15px var(--theme-glow);
+}
+.theme-icon {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+.theme-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+.theme-desc {
+  font-size: 0.7rem;
+  color: var(--text3);
+  line-height: 1.3;
+}
+
+/* News Feed Grid & Cards */
+.news-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+.news-card {
+  padding: 1.25rem;
+  height: 100%;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+.news-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary);
+  box-shadow: var(--glow);
+}
+
+/* Badges for news sources */
+.badge-blue {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+.badge-neutral {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+.badge-amber {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: var(--amber) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+.badge-violet {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #a78bfa !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+.badge-red {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: var(--red) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+.badge-pink {
+  background: rgba(236, 72, 153, 0.15) !important;
+  color: var(--pink) !important;
+  border: 1px solid rgba(236, 72, 153, 0.3) !important;
+}
+.badge-green {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: var(--green) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+.badge-rose {
+  background: rgba(244, 63, 94, 0.15) !important;
+  color: #fb7185 !important;
+  border: 1px solid rgba(244, 63, 94, 0.3) !important;
+}
+
+/* ── Glassmorphism and Animated Backgrounds for DebateRoom ── */
+.debate-room-container {
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+.debate-room-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  transition: opacity 1s ease;
+}
+
+/* Theme Background: Politics */
+.debate-bg-politics::before {
+  background: 
+    radial-gradient(circle at 15% 50%, rgba(239, 68, 68, 0.18) 0%, transparent 50%),
+    radial-gradient(circle at 85% 50%, rgba(59, 130, 246, 0.18) 0%, transparent 50%);
+  animation: politicsPulse 10s ease-in-out infinite alternate;
+}
+@keyframes politicsPulse {
+  0% {
+    background-size: 100% 100%, 100% 100%;
+    background-position: 10% 45%, 90% 55%;
+  }
+  100% {
+    background-size: 115% 115%, 115% 115%;
+    background-position: 20% 55%, 80% 45%;
+  }
+}
+
+/* Theme Background: Science */
+.debate-bg-science::before {
+  background: 
+    linear-gradient(rgba(16, 185, 129, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.14) 0%, transparent 70%);
+  background-size: 40px 40px, 40px 40px, 100% 100%;
+  animation: scienceDrift 16s linear infinite;
+}
+@keyframes scienceDrift {
+  0% { background-position: 0px 0px, 0px 0px, 50% 50%; }
+  100% { background-position: 40px 80px, 40px 80px, 50% 50%; }
+}
+
+/* Theme Background: Gaming */
+.debate-bg-gaming::before {
+  background: 
+    linear-gradient(0deg, rgba(139, 92, 246, 0.06) 2px, transparent 2px),
+    radial-gradient(circle at 50% 25%, rgba(236, 72, 153, 0.16) 0%, transparent 60%);
+  background-size: 100% 30px, 100% 100%;
+  animation: gamingScan 12s linear infinite;
+}
+@keyframes gamingScan {
+  0% { background-position: 0 0, 50% 25%; }
+  100% { background-position: 0 360px, 50% 30%; }
+}
+
+/* Theme Background: Sports */
+.debate-bg-sports::before {
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(245, 158, 11, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 75% 75%, rgba(239, 68, 68, 0.12) 0%, transparent 45%);
+  animation: sportsWaves 8s ease-in-out infinite alternate;
+}
+@keyframes sportsWaves {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.1) translate(1%, 2%); }
+}
+
+/* Theme Background: Culture */
+.debate-bg-culture::before {
+  background: linear-gradient(125deg, rgba(124, 58, 237, 0.15), rgba(236, 72, 153, 0.15), rgba(6, 182, 212, 0.08));
+  background-size: 200% 200%;
+  animation: cultureShimmer 10s ease infinite alternate;
+}
+@keyframes cultureShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* Theme Background: News */
+.debate-bg-news::before {
+  background: 
+    linear-gradient(90deg, rgba(6, 182, 212, 0.02) 1px, transparent 1px),
+    linear-gradient(rgba(6, 182, 212, 0.02) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.25) 0%, transparent 80%);
+  background-size: 60px 60px;
+  animation: newsGrid 30s linear infinite;
+}
+@keyframes newsGrid {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+
+/* Theme Background: Theory */
+.debate-bg-theory::before {
+  background: 
+    radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 15% 85%, rgba(20, 184, 166, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.4) 0%, transparent 100%);
+  animation: theoryNebula 20s ease-in-out infinite alternate;
+}
+@keyframes theoryNebula {
+  0% { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1.15) rotate(4deg); }
+}
+
+/* Theme Background: Streamer */
+.debate-bg-streamer::before {
+  background: 
+    radial-gradient(circle at 25% 75%, rgba(145, 70, 255, 0.18) 0%, transparent 45%),
+    radial-gradient(circle at 75% 25%, rgba(219, 39, 119, 0.14) 0%, transparent 45%);
+  animation: streamerGlow 6s ease-in-out infinite alternate;
+}
+@keyframes streamerGlow {
+  0% { filter: hue-rotate(0deg); transform: scale(1); }
+  100% { filter: hue-rotate(10deg); transform: scale(1.06); }
+}
+
+/* Theme Background: Life */
+.debate-bg-life::before {
+  background: 
+    radial-gradient(circle at 35% 35%, rgba(251, 146, 60, 0.14) 0%, transparent 50%),
+    radial-gradient(circle at 65% 65%, rgba(244, 63, 94, 0.12) 0%, transparent 50%);
+  animation: lifePulse 12s ease-in-out infinite alternate;
+}
+@keyframes lifePulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+/* Theme Background: Default */
+.debate-bg-default::before {
+  background: radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.09) 0%, transparent 60%);
+}
+
+/* Glassmorphic panels overlay overrides */
+.video-grid {
+  background: transparent !important;
+}
+.video-pane {
+  background: rgba(10, 10, 20, 0.35) !important;
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius);
+}
+.simulated-stream {
+  background: transparent !important;
+}
+.debate-header {
+  background: rgba(15, 15, 27, 0.65) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1;
+}
+.debate-sidebar {
+  background: rgba(15, 15, 27, 0.65) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1;
+}
+.debate-controls {
+  z-index: 1;
+}
+.debate-stage {
+  z-index: 1;
+  position: relative;
+}
